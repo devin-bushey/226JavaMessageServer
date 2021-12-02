@@ -5,11 +5,10 @@ import java.io.*;
 import java.nio.channels.IllegalBlockingModeException;
 import java.util.*;
 
-public class App {
+public class Server {
 
     protected int port;
     protected final String HOST = "";
-
 
     protected final int KEY_SIZE = 8;
     protected final int MAX_MSG_SIZE = 160;
@@ -19,14 +18,28 @@ public class App {
     protected final String PUT_CMD = "PUT";
     protected final String BLANK = "";
 
-
     protected HashMap<String, String> messages = new HashMap<String, String>();
 
-    public App(int port) {
+    public Server(int port) {
         this.port = port; 
     }
 
+    /*
+    # PURPOSE:
+    # Given a string, extracts the key and message, and stores the message in the 'messages' hashmap
+    #
+    # PARAMETERS:
+    # 's' is the string that will be used for the key and message extraction
+    #
+    # RETURN/SIDE EFFECTS:
+    # Returns OK_RESPONSE on success, ERROR_RESPONSE otherwise
+    #
+    # NOTES:
+    # To succeed, the string must be of format "KEYMSG" where KEY is of length KEY_SIZE
+    # and MSG does not exceed MAX_MSG_SIZE
+    */
     private String process_put(String s){
+
         if (s.length() < KEY_SIZE){
             return ERROR_RESPONSE;
         }
@@ -44,17 +57,29 @@ public class App {
         return OK_RESPONSE;
     }
 
+    /*
+    #
+    # PURPOSE:
+    # Given a string, extracts the key and message from it, and returns the message associated with 
+    # the key
+    #
+    # PARAMETERS:
+    # 's' is the string that will be used for the key and message extraction
+    #
+    # RETURN/SIDE EFFECTS:
+    # Returns the message if the extraction succeeded, and b'' otherwise
+    #
+    # NOTES:
+    # To succeed, the string must be of format "KEY" where KEY is of length KEY_SIZE
+    #
+    */
     private String process_get(String s){
-
-        //System.out.println(s);
 
         if (s.length() < KEY_SIZE){
             return BLANK;
         }
         String key = s.substring(0, KEY_SIZE);
         String msg = s.substring(KEY_SIZE);
-
-        //System.out.println(msg);
 
         if (msg.length() != 0){
             return BLANK;
@@ -72,6 +97,23 @@ public class App {
 
     }
 
+    /*
+    #
+    # PURPOSE:
+    # Given a string, parses the string and implements the contained PUT or GET command
+    #
+    # PARAMETERS:
+    # 's' is the string that will be used for parsing
+    #
+    # RETURN/SIDE EFFECTS:
+    # Returns the result of the command if the extraction succeeded, ERROR_RESPONSE otherwise
+    #
+    # NOTES:
+    # The string is assumed to be of format "CMDKEYMSG" where CMD is either PUT_CMD or GET_CMD,
+    # KEY is of length KEY_SIZE, and MSG varies depending on the command. See process_put(s)
+    # and process_get(s) for details regarding what the commands do and their return values
+    #
+    */
     private String process_line(String s){
         String cmd = s.substring(0, PUT_CMD.length());
 
@@ -86,7 +128,16 @@ public class App {
         }
     }
 
-
+    /*
+    #
+    # PURPOSE:
+    # Given a socket, processes client command (refer to 'process_line' method), closes socket when process is complete 
+    # 
+    # PARAMETERS:
+    # 'clientSocket' is an instance of the Socket class
+    # 
+    #
+    */
     void delegate(Socket clientSocket) {
 
         String response;
@@ -114,6 +165,16 @@ public class App {
         }
     }
 
+    /*
+    #
+    # PURPOSE:
+    # Run the server on an infinite loop and run each accepted connection on its own thread
+    # 
+    # NOTES:
+    # Catch the following errors:
+    # IOException, SecurityException, IllegalArgumentException, IllegalBlockingModeException
+    #
+    */
     public void serve() {
         try (
             ServerSocket serverSocket = new ServerSocket(port);
@@ -148,13 +209,20 @@ public class App {
         }
     }
 
+    /*
+    #
+    # PURPOSE:
+    # Main function to start the server.
+    # Requires a port number
+    #
+    */
     public static void main( String[] args )
 	{
 		if (args.length != 1) {
 			System.err.println("Need <port>");
 			System.exit(-99);
 		}
-		App s = new App(Integer.valueOf(args[0]));
+		Server s = new Server(Integer.valueOf(args[0]));
 		s.serve();
 	}
 }

@@ -55,7 +55,7 @@
 	  <configuration>
 	    <archive>
 	       <manifest>
-		  <mainClass>ca.camosun.ICS226.App</mainClass>
+		  <mainClass>ca.camosun.ICS226.Server</mainClass>
 	       </manifest>
 	    </archive>
 	  </configuration>
