@@ -13,6 +13,7 @@ public class Server {
     protected final int KEY_SIZE = 8;
     protected final int MAX_MSG_SIZE = 160;
     protected final String ERROR_RESPONSE = "NO";
+    protected final String NO_RESPONSE = "NO";
     protected final String OK_RESPONSE = "OK";
     protected final String GET_CMD = "GET";
     protected final String PUT_CMD = "PUT";
@@ -45,9 +46,18 @@ public class Server {
         }
         String key = s.substring(0, KEY_SIZE);
         String msg = s.substring(KEY_SIZE);
+        String exMsg = "";
 
         if (msg.length() > MAX_MSG_SIZE){
             return ERROR_RESPONSE;
+        }
+
+        synchronized(this) {
+            exMsg = messages.get(key);
+        }
+
+        if (exMsg != null){
+            return NO_RESPONSE.concat(exMsg);
         }
 
         synchronized(this) {
@@ -75,6 +85,7 @@ public class Server {
     */
     private String process_get(String s){
 
+        
         if (s.length() < KEY_SIZE){
             return BLANK;
         }
@@ -118,6 +129,11 @@ public class Server {
         String cmd = s.substring(0, PUT_CMD.length());
 
         if (cmd.equals(PUT_CMD)){
+
+            synchronized(this) {
+                System.out.println(s);
+            }
+            
             return process_put(s.substring(PUT_CMD.length()));
         }
         else if(cmd.equals(GET_CMD)){
@@ -152,9 +168,10 @@ public class Server {
             if (inputLine == null) {
                 return;
             }
-            synchronized(this) {
-                System.out.println(inputLine);
-            }
+            
+            /* synchronized(this) {
+                System.out.println(s);
+            } */
 
             response = process_line(inputLine);
             out.println(response);
